@@ -44,12 +44,7 @@ function isValidUrl(value?: string | null): boolean {
 }
 
 function hasProfileLink(profile: SeekerProfileFields): boolean {
-  return (
-    isValidUrl(profile.linkedinUrl) ||
-    isValidUrl(profile.portfolioUrl) ||
-    isValidUrl(profile.githubUrl) ||
-    isValidUrl(profile.otherSocialUrl)
-  );
+  return isValidUrl(profile.linkedinUrl) || isValidUrl(profile.portfolioUrl);
 }
 
 export function toSeekerProfileFields(profile: SeekerProfileLike): SeekerProfileFields {
@@ -80,10 +75,13 @@ export function getProfileCompletion(profile: SeekerProfileFields, hasResume: bo
     profile.skills.length >= 1,
     profile.desiredRoles.length >= 1,
     profile.location.trim().length >= 2,
+    profile.currentCompany.trim().length >= 2,
     profile.salaryExpectation.trim().length >= 1,
     profile.immediateJoining || profile.noticePeriod.trim().length >= 1,
     hasResume,
     hasProfileLink(profile),
+    isValidUrl(profile.githubUrl),
+    isValidUrl(profile.otherSocialUrl),
   ];
   const passed = checks.filter(Boolean).length;
   return Math.round((passed / checks.length) * 100);

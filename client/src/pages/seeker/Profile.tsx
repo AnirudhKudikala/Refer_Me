@@ -84,7 +84,7 @@ export default function SeekerProfile() {
             <Input label="LinkedIn URL" type="url" value={form.linkedinUrl} onChange={(e) => update({ linkedinUrl: e.target.value })} />
             <Input label="Portfolio URL" type="url" value={form.portfolioUrl} onChange={(e) => update({ portfolioUrl: e.target.value })} />
             <Input label="GitHub Profile" type="url" placeholder="https://github.com/username" value={form.githubUrl} onChange={(e) => update({ githubUrl: e.target.value })} />
-            <Input label="Other Social Profile" type="url" placeholder="https://x.com/username" value={form.otherSocialUrl} onChange={(e) => update({ otherSocialUrl: e.target.value })} />
+            <Input label="Other Social Profile" type="url" placeholder="https://www.hackerrank.com/username" value={form.otherSocialUrl} onChange={(e) => update({ otherSocialUrl: e.target.value })} />
 
             <div>
               <p className="text-sm font-medium text-muted mb-2">Resume</p>

@@ -1,0 +1,49 @@
+import { z } from "zod";
+
+export interface SeekerProfileFields {
+  fullName: string;
+  headline: string;
+  bio: string;
+  skills: string[];
+  desiredRoles: string[];
+  experienceYears: number;
+  location: string;
+  noticePeriod: string;
+  salaryExpectation: string;
+  immediateJoining: boolean;
+  linkedinUrl?: string | null;
+  portfolioUrl?: string | null;
+}
+
+const urlSchema = z.string().url();
+
+function isValidUrl(value?: string | null): boolean {
+  if (!value?.trim()) return false;
+  return urlSchema.safeParse(value.trim()).success;
+}
+
+export function getProfileCompletion(profile: SeekerProfileFields, hasResume: boolean): number {
+  const checks = [
+    profile.fullName.trim().length >= 2,
+    profile.headline.trim().length >= 3,
+    profile.bio.trim().length >= 20,
+    profile.skills.length >= 1,
+    profile.desiredRoles.length >= 1,
+    profile.location.trim().length >= 2,
+    profile.salaryExpectation.trim().length >= 1,
+    profile.immediateJoining || profile.noticePeriod.trim().length >= 1,
+    hasResume,
+    isValidUrl(profile.linkedinUrl) || isValidUrl(profile.portfolioUrl),
+  ];
+  const passed = checks.filter(Boolean).length;
+  return Math.round((passed / checks.length) * 100);
+}
+
+export function isProfileFullyComplete(profile: SeekerProfileFields, hasResume: boolean): boolean {
+  return getProfileCompletion(profile, hasResume) === 100;
+}
+
+export function getNoticePeriodLabel(profile: Pick<SeekerProfileFields, "immediateJoining" | "noticePeriod">): string {
+  if (profile.immediateJoining) return "Immediate";
+  return profile.noticePeriod;
+}

@@ -1,0 +1,154 @@
+@import "@fontsource/geist-sans/400.css";
+@import "@fontsource/geist-sans/500.css";
+@import "@fontsource/geist-sans/600.css";
+@import "@fontsource/geist-sans/700.css";
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Geist Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Dark theme (default) — deep space, midnight navy, graphite */
+:root,
+[data-theme="dark"] {
+  --color-bg: #050508;
+  --color-surface: #0c0f14;
+  --color-elevated: #141820;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-text: #f1f5f9;
+  --color-text-muted: #94a3b8;
+  --color-accent: #10b981;
+  --color-accent-hover: #34d399;
+  --color-accent-muted: rgba(16, 185, 129, 0.15);
+  --color-accent-secondary: #7c3aed;
+  --color-accent-cyan: #22d3ee;
+  --color-glass-bg: rgba(255, 255, 255, 0.04);
+  --color-glass-border: rgba(255, 255, 255, 0.08);
+  --color-nav-bg: rgba(5, 5, 8, 0.85);
+  --color-input-bg: rgba(255, 255, 255, 0.04);
+  --color-skeleton-from: rgba(255, 255, 255, 0.03);
+  --color-skeleton-to: rgba(255, 255, 255, 0.07);
+  --gradient-hero-1: rgba(16, 185, 129, 0.12);
+  --gradient-hero-2: rgba(124, 58, 237, 0.08);
+  --gradient-hero-3: rgba(34, 211, 238, 0.06);
+  --shadow-glow: rgba(16, 185, 129, 0.15);
+}
+
+/* Light theme */
+[data-theme="light"] {
+  --color-bg: #f8faf9;
+  --color-surface: #ffffff;
+  --color-elevated: #f1f5f4;
+  --color-border: rgba(15, 23, 42, 0.08);
+  --color-text: #0f172a;
+  --color-text-muted: #64748b;
+  --color-accent: #059669;
+  --color-accent-hover: #10b981;
+  --color-accent-muted: rgba(5, 150, 105, 0.1);
+  --color-accent-secondary: #6d28d9;
+  --color-accent-cyan: #0891b2;
+  --color-glass-bg: rgba(255, 255, 255, 0.75);
+  --color-glass-border: rgba(15, 23, 42, 0.08);
+  --color-nav-bg: rgba(248, 250, 249, 0.9);
+  --color-input-bg: rgba(15, 23, 42, 0.03);
+  --color-skeleton-from: rgba(15, 23, 42, 0.04);
+  --color-skeleton-to: rgba(15, 23, 42, 0.08);
+  --gradient-hero-1: rgba(16, 185, 129, 0.08);
+  --gradient-hero-2: rgba(124, 58, 237, 0.05);
+  --gradient-hero-3: rgba(34, 211, 238, 0.04);
+  --shadow-glow: rgba(16, 185, 129, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.gradient-bg {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, var(--gradient-hero-1), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 60%, var(--gradient-hero-2), transparent),
+    radial-gradient(ellipse 50% 30% at 20% 80%, var(--gradient-hero-3), transparent),
+    var(--color-bg);
+}
+
+.glass {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  background: var(--color-glass-bg);
+  border: 1px solid var(--color-glass-border);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-skeleton-from) 0%,
+    var(--color-skeleton-to) 50%,
+    var(--color-skeleton-from) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.text-theme { color: var(--color-text); }
+.text-muted { color: var(--color-text-muted); }
+.text-accent { color: var(--color-accent); }
+.bg-theme { background-color: var(--color-bg); }
+.bg-surface { background-color: var(--color-surface); }
+.border-theme { border-color: var(--color-border); }
+
+.nav-link {
+  color: var(--color-text-muted);
+  transition: color 0.2s;
+}
+.nav-link:hover { color: var(--color-text); }
+.nav-link-active {
+  color: var(--color-accent);
+  background: var(--color-accent-muted);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}

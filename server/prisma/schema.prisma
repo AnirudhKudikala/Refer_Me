@@ -1,0 +1,131 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SEEKER
+  REFERRER
+}
+
+enum InterestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String?
+  googleId     String?  @unique
+  role         Role?
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  seekerProfile   SeekerProfile?
+  referrerProfile ReferrerProfile?
+  resume          Resume?
+  sentInterests   Interest[]       @relation("ReferrerInterests")
+  receivedInterests Interest[]     @relation("SeekerInterests")
+  messages        Message[]
+}
+
+model SeekerProfile {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  fullName          String   @default("")
+  headline          String   @default("")
+  bio               String   @default("")
+  skills            String[] @default([])
+  desiredRoles      String[] @default([])
+  experienceYears   Int      @default(0)
+  location          String   @default("")
+  linkedinUrl       String?
+  portfolioUrl      String?
+  noticePeriod      String   @default("")
+  salaryExpectation String   @default("")
+  immediateJoining  Boolean  @default(false)
+  isProfileComplete Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([skills])
+  @@index([desiredRoles])
+  @@index([experienceYears])
+  @@index([location])
+}
+
+model ReferrerProfile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  fullName         String   @default("")
+  company          String   @default("")
+  jobTitle         String   @default("")
+  department       String?
+  bio              String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Resume {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  fileName   String
+  fileUrl    String
+  fileSize   Int
+  mimeType   String
+  uploadedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Interest {
+  id         String         @id @default(cuid())
+  referrerId String
+  seekerId   String
+  status     InterestStatus @default(PENDING)
+  message    String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  referrer     User          @relation("ReferrerInterests", fields: [referrerId], references: [id], onDelete: Cascade)
+  seeker       User          @relation("SeekerInterests", fields: [seekerId], references: [id], onDelete: Cascade)
+  conversation Conversation?
+
+  @@unique([referrerId, seekerId])
+  @@index([status])
+}
+
+model Conversation {
+  id         String   @id @default(cuid())
+  interestId String   @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  interest Interest  @relation(fields: [interestId], references: [id], onDelete: Cascade)
+  messages Message[]
+}
+
+model Message {
+  id             String    @id @default(cuid())
+  conversationId String
+  senderId       String
+  content        String
+  readAt         DateTime?
+  createdAt      DateTime  @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}

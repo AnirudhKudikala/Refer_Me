@@ -8,18 +8,68 @@ export interface SeekerProfileFields {
   desiredRoles: string[];
   experienceYears: number;
   location: string;
+  currentCompany: string;
   noticePeriod: string;
   salaryExpectation: string;
   immediateJoining: boolean;
   linkedinUrl?: string | null;
   portfolioUrl?: string | null;
+  githubUrl?: string | null;
+  otherSocialUrl?: string | null;
 }
+
+type SeekerProfileLike = Partial<SeekerProfileFields> & {
+  fullName?: string;
+  headline?: string;
+  bio?: string;
+  skills?: string[];
+  desiredRoles?: string[];
+  experienceYears?: number;
+  location?: string;
+  currentCompany?: string;
+  noticePeriod?: string;
+  salaryExpectation?: string;
+  immediateJoining?: boolean;
+  linkedinUrl?: string | null;
+  portfolioUrl?: string | null;
+  githubUrl?: string | null;
+  otherSocialUrl?: string | null;
+};
 
 const urlSchema = z.string().url();
 
 function isValidUrl(value?: string | null): boolean {
   if (!value?.trim()) return false;
   return urlSchema.safeParse(value.trim()).success;
+}
+
+function hasProfileLink(profile: SeekerProfileFields): boolean {
+  return (
+    isValidUrl(profile.linkedinUrl) ||
+    isValidUrl(profile.portfolioUrl) ||
+    isValidUrl(profile.githubUrl) ||
+    isValidUrl(profile.otherSocialUrl)
+  );
+}
+
+export function toSeekerProfileFields(profile: SeekerProfileLike): SeekerProfileFields {
+  return {
+    fullName: profile.fullName ?? "",
+    headline: profile.headline ?? "",
+    bio: profile.bio ?? "",
+    skills: profile.skills ?? [],
+    desiredRoles: profile.desiredRoles ?? [],
+    experienceYears: profile.experienceYears ?? 0,
+    location: profile.location ?? "",
+    currentCompany: profile.currentCompany ?? "",
+    noticePeriod: profile.noticePeriod ?? "",
+    salaryExpectation: profile.salaryExpectation ?? "",
+    immediateJoining: profile.immediateJoining ?? false,
+    linkedinUrl: profile.linkedinUrl ?? null,
+    portfolioUrl: profile.portfolioUrl ?? null,
+    githubUrl: profile.githubUrl ?? null,
+    otherSocialUrl: profile.otherSocialUrl ?? null,
+  };
 }
 
 export function getProfileCompletion(profile: SeekerProfileFields, hasResume: boolean): number {
@@ -33,7 +83,7 @@ export function getProfileCompletion(profile: SeekerProfileFields, hasResume: bo
     profile.salaryExpectation.trim().length >= 1,
     profile.immediateJoining || profile.noticePeriod.trim().length >= 1,
     hasResume,
-    isValidUrl(profile.linkedinUrl) || isValidUrl(profile.portfolioUrl),
+    hasProfileLink(profile),
   ];
   const passed = checks.filter(Boolean).length;
   return Math.round((passed / checks.length) * 100);

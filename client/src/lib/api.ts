@@ -225,8 +225,11 @@ export interface SeekerProfile {
   desiredRoles: string[];
   experienceYears: number;
   location: string;
+  currentCompany: string;
   linkedinUrl?: string | null;
   portfolioUrl?: string | null;
+  githubUrl?: string | null;
+  otherSocialUrl?: string | null;
   noticePeriod?: string;
   salaryExpectation?: string;
   immediateJoining?: boolean;
@@ -286,8 +289,11 @@ export interface PaginatedSeekers {
 
 export interface SeekerDetail extends SeekerCard {
   bio: string;
+  currentCompany?: string;
   linkedinUrl?: string | null;
   portfolioUrl?: string | null;
+  githubUrl?: string | null;
+  otherSocialUrl?: string | null;
   email?: string | null;
   resume?: Resume | null;
   interest?: { id: string; status: string; message?: string | null; conversationId?: string } | null;

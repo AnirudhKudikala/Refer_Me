@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Mail, ExternalLink, MessageSquare, Clock, IndianRupee, Briefcase, MapPin, CalendarClock } from "lucide-react";
+import { ArrowLeft, Mail, ExternalLink, MessageSquare, Clock, IndianRupee, Briefcase, MapPin, CalendarClock, Building2 } from "lucide-react";
 import { PageTransition } from "../../components/layout/PageTransition";
 import { GlassCard } from "../../components/ui/GlassCard";
 import { Button } from "../../components/ui/Button";
@@ -88,9 +88,10 @@ export default function SeekerDetail() {
 
           <div className="grid grid-cols-2 gap-3 mb-6 text-sm">
             <div className="flex items-center gap-2 text-muted"><MapPin className="h-4 w-4 text-accent" /> {seeker.location || "—"}</div>
+            <div className="flex items-center gap-2 text-muted"><Building2 className="h-4 w-4 text-accent" /> {seeker.currentCompany || "—"}</div>
             <div className="flex items-center gap-2 text-muted"><Briefcase className="h-4 w-4 text-accent" /> {seeker.experienceYears} years exp</div>
             <div className="flex items-center gap-2 text-muted"><Clock className="h-4 w-4 text-accent" /> {seeker.noticePeriod || "—"}</div>
-            <div className="flex items-center gap-2 text-muted"><IndianRupee className="h-4 w-4 text-accent" /> {seeker.salaryExpectation || "—"}</div>
+            <div className="flex items-center gap-2 text-muted col-span-2 sm:col-span-1"><IndianRupee className="h-4 w-4 text-accent" /> {seeker.salaryExpectation || "—"}</div>
           </div>
 
           <p className="text-theme/90 leading-relaxed mb-6">{seeker.bio || "No bio provided."}</p>
@@ -125,6 +126,16 @@ export default function SeekerDetail() {
             {seeker.portfolioUrl && (
               <a href={seeker.portfolioUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-muted hover:text-theme">
                 <ExternalLink className="h-4 w-4" /> Portfolio
+              </a>
+            )}
+            {seeker.githubUrl && (
+              <a href={seeker.githubUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-muted hover:text-theme">
+                <ExternalLink className="h-4 w-4" /> GitHub Profile
+              </a>
+            )}
+            {seeker.otherSocialUrl && (
+              <a href={seeker.otherSocialUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-muted hover:text-theme">
+                <ExternalLink className="h-4 w-4" /> Social Profile
               </a>
             )}
             {seeker.resume && (

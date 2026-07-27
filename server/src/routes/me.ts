@@ -6,7 +6,7 @@ import { prisma } from "../lib/prisma.js";
 import { requireAuth, requireRole, type AuthRequest } from "../middleware/auth.js";
 import { uploadResume } from "../middleware/upload.js";
 import { env } from "../config/env.js";
-import { isProfileFullyComplete } from "../lib/profileCompletion.js";
+import { isProfileFullyComplete, toSeekerProfileFields } from "../lib/profileCompletion.js";
 import { getResumeFilePath, serveResumeFile } from "../lib/resumeFile.js";
 
 async function refreshProfileCompletion(userId: string) {
@@ -15,7 +15,7 @@ async function refreshProfileCompletion(userId: string) {
   const resume = await prisma.resume.findUnique({ where: { userId } });
   await prisma.seekerProfile.update({
     where: { userId },
-    data: { isProfileComplete: isProfileFullyComplete(profile, !!resume) },
+    data: { isProfileComplete: isProfileFullyComplete(toSeekerProfileFields(profile), !!resume) },
   });
 }
 
@@ -54,8 +54,11 @@ const seekerProfileSchema = z.object({
   desiredRoles: z.array(z.string()).optional(),
   experienceYears: z.number().int().min(0).optional(),
   location: z.string().optional(),
+  currentCompany: z.string().optional(),
   linkedinUrl: z.string().url().optional().or(z.literal("")),
   portfolioUrl: z.string().url().optional().or(z.literal("")),
+  githubUrl: z.string().url().optional().or(z.literal("")),
+  otherSocialUrl: z.string().url().optional().or(z.literal("")),
   noticePeriod: z.string().optional(),
   salaryExpectation: z.string().optional(),
   immediateJoining: z.boolean().optional(),
@@ -67,14 +70,17 @@ router.patch("/seeker-profile", requireAuth, requireRole("SEEKER"), async (req: 
     const existing = await prisma.seekerProfile.findUnique({ where: { userId: req.auth!.userId } });
     if (!existing) return res.status(404).json({ error: "Profile not found" });
 
-    const merged = {
-      ...existing,
+    const base = toSeekerProfileFields(existing);
+    const merged = toSeekerProfileFields({
+      ...base,
       ...data,
-      linkedinUrl: data.linkedinUrl !== undefined ? (data.linkedinUrl || null) : existing.linkedinUrl,
-      portfolioUrl: data.portfolioUrl !== undefined ? (data.portfolioUrl || null) : existing.portfolioUrl,
-      noticePeriod: data.immediateJoining ? "" : (data.noticePeriod ?? existing.noticePeriod),
-      immediateJoining: data.immediateJoining ?? existing.immediateJoining,
-    };
+      linkedinUrl: data.linkedinUrl !== undefined ? (data.linkedinUrl || null) : base.linkedinUrl,
+      portfolioUrl: data.portfolioUrl !== undefined ? (data.portfolioUrl || null) : base.portfolioUrl,
+      githubUrl: data.githubUrl !== undefined ? (data.githubUrl || null) : base.githubUrl,
+      otherSocialUrl: data.otherSocialUrl !== undefined ? (data.otherSocialUrl || null) : base.otherSocialUrl,
+      noticePeriod: data.immediateJoining ? "" : (data.noticePeriod ?? base.noticePeriod),
+      immediateJoining: data.immediateJoining ?? base.immediateJoining,
+    });
 
     const resume = await prisma.resume.findUnique({ where: { userId: req.auth!.userId } });
     const isProfileComplete = isProfileFullyComplete(merged, !!resume);
@@ -83,8 +89,10 @@ router.patch("/seeker-profile", requireAuth, requireRole("SEEKER"), async (req: 
       where: { userId: req.auth!.userId },
       data: {
         ...data,
-        linkedinUrl: data.linkedinUrl || null,
-        portfolioUrl: data.portfolioUrl || null,
+        linkedinUrl: data.linkedinUrl !== undefined ? (data.linkedinUrl || null) : undefined,
+        portfolioUrl: data.portfolioUrl !== undefined ? (data.portfolioUrl || null) : undefined,
+        githubUrl: data.githubUrl !== undefined ? (data.githubUrl || null) : undefined,
+        otherSocialUrl: data.otherSocialUrl !== undefined ? (data.otherSocialUrl || null) : undefined,
         noticePeriod: merged.immediateJoining ? "" : (data.noticePeriod ?? undefined),
         immediateJoining: data.immediateJoining,
         isProfileComplete,

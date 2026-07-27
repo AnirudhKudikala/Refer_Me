@@ -28,11 +28,14 @@ function ProfileCompletion({ me }: { me: NonNullable<ReturnType<typeof useAuthSt
       desiredRoles: profile.desiredRoles,
       experienceYears: profile.experienceYears,
       location: profile.location,
+      currentCompany: profile.currentCompany ?? "",
       noticePeriod: profile.noticePeriod ?? "",
       salaryExpectation: profile.salaryExpectation ?? "",
       immediateJoining: profile.immediateJoining ?? false,
       linkedinUrl: profile.linkedinUrl,
       portfolioUrl: profile.portfolioUrl,
+      githubUrl: profile.githubUrl,
+      otherSocialUrl: profile.otherSocialUrl,
     } satisfies SeekerProfileFields,
     !!me.resume
   );

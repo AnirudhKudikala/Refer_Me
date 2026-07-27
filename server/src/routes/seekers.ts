@@ -1,70 +1,56 @@
 import { Router } from "express";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth, requireRole, type AuthRequest } from "../middleware/auth.js";
 import { matchesAnyFuzzy } from "../lib/fuzzy.js";
-import { getNoticePeriodLabel } from "../lib/profileCompletion.js";
+import { getNoticePeriodLabel, toSeekerProfileFields } from "../lib/profileCompletion.js";
 import { getResumeFilePath, serveResumeFile } from "../lib/resumeFile.js";
 
 const router = Router();
 
-type SeekerResumeRow = {
-  id: string;
-  fileName: string;
-  fileUrl: string;
-  fileSize: number;
-  mimeType: string;
-  uploadedAt: Date;
-};
+const seekerWithUser = {
+  include: {
+    user: {
+      select: {
+        id: true,
+        avatarUrl: true,
+        email: true,
+        resume: true,
+      },
+    },
+  },
+} satisfies Prisma.SeekerProfileDefaultArgs;
 
-type SeekerProfileRow = {
-  fullName: string;
-  headline: string;
-  bio: string;
-  skills: string[];
-  desiredRoles: string[];
-  experienceYears: number;
-  location: string;
-  noticePeriod: string;
-  salaryExpectation: string;
-  immediateJoining: boolean;
-  updatedAt: Date;
-  linkedinUrl: string | null;
-  portfolioUrl: string | null;
-  user: {
-    id: string;
-    avatarUrl: string | null;
-    email: string;
-    resume: SeekerResumeRow | null;
-  };
-};
+const interestWithConversation = {
+  include: { conversation: { select: { id: true } } },
+} satisfies Prisma.InterestDefaultArgs;
 
-type ReferrerInterestRow = {
-  id: string;
-  seekerId: string;
-  status: string;
-  message: string | null;
-  conversation: { id: string } | null;
-};
+type SeekerProfileRow = Prisma.SeekerProfileGetPayload<typeof seekerWithUser>;
+type ReferrerInterestRow = Prisma.InterestGetPayload<typeof interestWithConversation>;
 
 function mapSeeker(
   s: SeekerProfileRow,
   interest?: ReferrerInterestRow | null
 ) {
+  const profile = toSeekerProfileFields(s);
   return {
     id: s.user.id,
-    fullName: s.fullName,
-    headline: s.headline,
-    bio: s.bio,
-    skills: s.skills,
-    desiredRoles: s.desiredRoles,
-    experienceYears: s.experienceYears,
-    location: s.location,
-    noticePeriod: getNoticePeriodLabel(s),
-    immediateJoining: s.immediateJoining,
-    salaryExpectation: s.salaryExpectation,
+    fullName: profile.fullName,
+    headline: profile.headline,
+    bio: profile.bio,
+    skills: profile.skills,
+    desiredRoles: profile.desiredRoles,
+    experienceYears: profile.experienceYears,
+    location: profile.location,
+    currentCompany: profile.currentCompany,
+    noticePeriod: getNoticePeriodLabel(profile),
+    immediateJoining: profile.immediateJoining,
+    salaryExpectation: profile.salaryExpectation,
     profileUpdatedAt: s.updatedAt.toISOString(),
-    linkedinUrl: s.linkedinUrl,
-    portfolioUrl: s.portfolioUrl,
+    linkedinUrl: profile.linkedinUrl,
+    portfolioUrl: profile.portfolioUrl,
+    githubUrl: profile.githubUrl,
+    otherSocialUrl: profile.otherSocialUrl,
     email: s.user.email,
     avatarUrl: s.user.avatarUrl,
     resume: s.user.resume,
@@ -111,22 +97,13 @@ router.get("/", requireAuth, requireRole("REFERRER"), async (req, res, next) => 
       prisma.seekerProfile.findMany({
         where,
         orderBy: { updatedAt: sortOrder },
-        include: {
-          user: {
-            select: {
-              id: true,
-              avatarUrl: true,
-              email: true,
-              resume: true,
-            },
-          },
-        },
+        ...seekerWithUser,
       }),
       prisma.interest.findMany({
         where: { referrerId: authReq.auth!.userId },
-        include: { conversation: { select: { id: true } } },
+        ...interestWithConversation,
       }),
-    ]) as [SeekerProfileRow[], ReferrerInterestRow[]];
+    ]);
 
     const interestMap = new Map<string, ReferrerInterestRow>(
       interests.map((interest) => [interest.seekerId, interest])
@@ -183,18 +160,16 @@ router.get("/:id", requireAuth, requireRole("REFERRER"), async (req, res, next) 
   try {
     const authReq = req as AuthRequest;
     const seekerId = req.params.id as string;
-    const profile = (await prisma.seekerProfile.findUnique({
+    const profile = await prisma.seekerProfile.findUnique({
       where: { userId: seekerId },
-      include: {
-        user: { select: { id: true, avatarUrl: true, email: true, resume: true } },
-      },
-    })) as SeekerProfileRow | null;
+      ...seekerWithUser,
+    });
     if (!profile) return res.status(404).json({ error: "Seeker not found" });
 
-    const interest = (await prisma.interest.findUnique({
+    const interest = await prisma.interest.findUnique({
       where: { referrerId_seekerId: { referrerId: authReq.auth!.userId, seekerId } },
-      include: { conversation: { select: { id: true } } },
-    })) as ReferrerInterestRow | null;
+      ...interestWithConversation,
+    });
 
     res.json(mapSeeker(profile, interest));
   } catch (err) {

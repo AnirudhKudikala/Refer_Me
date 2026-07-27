@@ -46,8 +46,11 @@ model SeekerProfile {
   desiredRoles      String[] @default([])
   experienceYears   Int      @default(0)
   location          String   @default("")
+  currentCompany    String   @default("")
   linkedinUrl       String?
   portfolioUrl      String?
+  githubUrl         String?
+  otherSocialUrl    String?
   noticePeriod      String   @default("")
   salaryExpectation String   @default("")
   immediateJoining  Boolean  @default(false)

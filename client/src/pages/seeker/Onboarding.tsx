@@ -19,6 +19,7 @@ export default function SeekerOnboarding() {
     fullName: "",
     headline: "",
     location: "",
+    currentCompany: "",
     experienceYears: 0,
     noticePeriod: "",
     salaryExpectation: "",
@@ -28,6 +29,8 @@ export default function SeekerOnboarding() {
     bio: "",
     linkedinUrl: "",
     portfolioUrl: "",
+    githubUrl: "",
+    otherSocialUrl: "",
   });
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -64,6 +67,7 @@ export default function SeekerOnboarding() {
               <Input label="Full Name" value={form.fullName} onChange={(e) => update({ fullName: e.target.value })} required />
               <Input label="Headline" placeholder="e.g. Full Stack Engineer" value={form.headline} onChange={(e) => update({ headline: e.target.value })} />
               <Input label="Location" placeholder="e.g. San Francisco, CA" value={form.location} onChange={(e) => update({ location: e.target.value })} />
+              <Input label="Current Company" placeholder="e.g. Acme Corp" value={form.currentCompany} onChange={(e) => update({ currentCompany: e.target.value })} />
               <Input label="Years of Experience" type="number" min={0} value={form.experienceYears} onChange={(e) => update({ experienceYears: parseInt(e.target.value) || 0 })} />
               <ImmediateJoiningField
                 immediateJoining={form.immediateJoining}
@@ -85,6 +89,8 @@ export default function SeekerOnboarding() {
               <Textarea label="Bio" rows={4} placeholder="Tell referrers about yourself..." value={form.bio} onChange={(e) => update({ bio: e.target.value })} />
               <Input label="LinkedIn URL" type="url" placeholder="https://linkedin.com/in/..." value={form.linkedinUrl} onChange={(e) => update({ linkedinUrl: e.target.value })} />
               <Input label="Portfolio URL" type="url" placeholder="https://..." value={form.portfolioUrl} onChange={(e) => update({ portfolioUrl: e.target.value })} />
+              <Input label="GitHub Profile" type="url" placeholder="https://github.com/username" value={form.githubUrl} onChange={(e) => update({ githubUrl: e.target.value })} />
+              <Input label="Other Social Profile" type="url" placeholder="https://x.com/username" value={form.otherSocialUrl} onChange={(e) => update({ otherSocialUrl: e.target.value })} />
             </div>
           )}
 

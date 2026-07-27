@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AnimatePresence } from "framer-motion";
 import { useEffect } from "react";
@@ -16,6 +16,7 @@ import ReferrerOnboarding from "./pages/referrer/Onboarding";
 import ReferrerProfile from "./pages/referrer/Profile";
 import SeekerDetail from "./pages/referrer/SeekerDetail";
 import Chat from "./pages/Chat";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
@@ -58,7 +59,7 @@ function AppRoutes() {
           <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
           <Route path="/chat/:conversationId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </AnimatePresence>
     </>

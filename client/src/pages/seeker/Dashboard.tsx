@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { FileText, ExternalLink, MessageSquare, Bell } from "lucide-react";
+import { FileText, ExternalLink, MessageSquare, Bell, CheckCircle2, XCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { PageTransition } from "../../components/layout/PageTransition";
 import { GlassCard } from "../../components/ui/GlassCard";
@@ -11,7 +11,7 @@ import { InterestBadge } from "../../components/domain/InterestBadge";
 import { ResumeUpload } from "../../components/domain/ResumeUpload";
 import { staggerContainer, fadeUp } from "../../lib/motion";
 import { getProfileCompletion, type SeekerProfileFields } from "../../lib/profileCompletion";
-import { api } from "../../lib/api";
+import { api, type Interest } from "../../lib/api";
 import { useAuthStore } from "../../stores/authStore";
 import { formatDateTime } from "../../lib/utils";
 
@@ -63,6 +63,118 @@ function ProfileCompletion({ me }: { me: NonNullable<ReturnType<typeof useAuthSt
   );
 }
 
+function InterestCard({
+  interest,
+  onAccept,
+  onDecline,
+  acceptingId,
+}: {
+  interest: Interest;
+  onAccept: (id: string) => void;
+  onDecline: (id: string) => void;
+  acceptingId?: string;
+}) {
+  const referrerName = interest.referrer.referrerProfile?.fullName || interest.referrer.email;
+  const referrerRole = interest.referrer.referrerProfile
+    ? `${interest.referrer.referrerProfile.jobTitle} at ${interest.referrer.referrerProfile.company}`
+    : null;
+
+  return (
+    <GlassCard padding="sm">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="font-medium text-theme">{referrerName}</span>
+            <InterestBadge status={interest.status} />
+          </div>
+          {referrerRole && <p className="text-sm text-muted">{referrerRole}</p>}
+          {interest.message && (
+            <p className="text-sm text-muted/70 mt-2 italic">"{interest.message}"</p>
+          )}
+          {interest.status === "ACCEPTED" && (
+            <p className="text-xs text-muted mt-2">
+              Use chat to coordinate next steps. Referral status is tracked between you and the referrer.
+            </p>
+          )}
+          {interest.status === "DECLINED" && (
+            <p className="text-xs text-muted mt-2">You declined this request.</p>
+          )}
+        </div>
+        <div className="flex gap-2 shrink-0">
+          {interest.status === "PENDING" && (
+            <>
+              <Button
+                size="sm"
+                onClick={() => onAccept(interest.id)}
+                isLoading={acceptingId === interest.id}
+              >
+                Accept
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => onDecline(interest.id)}>
+                Decline
+              </Button>
+            </>
+          )}
+          {interest.status === "ACCEPTED" && interest.conversation && (
+            <Link to={`/chat/${interest.conversation.id}`}>
+              <Button size="sm" variant="secondary">
+                <MessageSquare className="h-3 w-3" /> Chat
+              </Button>
+            </Link>
+          )}
+        </div>
+      </div>
+    </GlassCard>
+  );
+}
+
+function RequestSection({
+  title,
+  icon: Icon,
+  badge,
+  description,
+  interests,
+  onAccept,
+  onDecline,
+  acceptingId,
+}: {
+  title: string;
+  icon: React.ElementType;
+  badge?: React.ReactNode;
+  description?: string;
+  interests: Interest[];
+  onAccept: (id: string) => void;
+  onDecline: (id: string) => void;
+  acceptingId?: string;
+}) {
+  if (interests.length === 0) return null;
+
+  return (
+    <section className="space-y-3">
+      <div>
+        <div className="flex items-center gap-2 mb-1">
+          <Icon className="h-4 w-4 text-accent" />
+          <h3 className="font-medium text-theme">{title}</h3>
+          {badge}
+        </div>
+        {description && <p className="text-sm text-muted">{description}</p>}
+      </div>
+      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-3">
+        {interests.map((interest) => (
+          <motion.div key={interest.id} variants={fadeUp}>
+            <InterestCard
+              interest={interest}
+              onAccept={onAccept}
+              onDecline={onDecline}
+              acceptingId={acceptingId}
+            />
+          </motion.div>
+        ))}
+      </motion.div>
+    </section>
+  );
+}
+
 export default function SeekerDashboard() {
   const { me } = useAuthStore();
   const queryClient = useQueryClient();
@@ -72,7 +184,7 @@ export default function SeekerDashboard() {
     queryFn: () => api.getInterests(),
   });
 
-  const updateMutation = useMutation({
+  const acceptMutation = useMutation({
     mutationFn: (id: string) => api.updateInterest(id, "ACCEPTED"),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["interests"] }),
   });
@@ -83,6 +195,8 @@ export default function SeekerDashboard() {
   });
 
   const pending = interests.filter((i) => i.status === "PENDING");
+  const accepted = interests.filter((i) => i.status === "ACCEPTED");
+  const declined = interests.filter((i) => i.status === "DECLINED");
 
   return (
     <PageTransition className="gradient-bg min-h-[calc(100vh-4rem)] px-4 py-8 sm:px-6">
@@ -91,12 +205,11 @@ export default function SeekerDashboard() {
           <h1 className="text-2xl font-semibold text-theme">
             Welcome{me?.seekerProfile?.fullName ? `, ${me.seekerProfile.fullName}` : ""}
           </h1>
-          <p className="text-muted mt-1">Manage your profile and review incoming referral requests.</p>
+          <p className="text-muted mt-1">Manage your profile and track referral requests from employees.</p>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
           {me && <ProfileCompletion me={me} />}
-
           <GlassCard>
             <div className="flex items-center gap-2 mb-4">
               <FileText className="h-4 w-4 text-accent" />
@@ -106,17 +219,16 @@ export default function SeekerDashboard() {
           </GlassCard>
         </div>
 
-        <div className="mt-8">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="mt-8 space-y-8">
+          <div className="flex items-center gap-2">
             <Bell className="h-4 w-4 text-purple-400" />
-            <h2 className="font-medium text-theme">Incoming Requests</h2>
-            {pending.length > 0 && <Badge variant="purple">{pending.length} pending</Badge>}
+            <h2 className="font-medium text-theme">Referral requests</h2>
           </div>
 
           {interests.length === 0 ? (
             <EmptyState
-              title="No requests yet"
-              description="When referrers express interest in your profile, they'll appear here."
+              title="No referral requests yet"
+              description="When referrers express interest in your profile, they'll appear here for you to accept or decline."
               action={
                 <Link to="/seeker/profile">
                   <Button variant="secondary">Improve your profile</Button>
@@ -124,49 +236,36 @@ export default function SeekerDashboard() {
               }
             />
           ) : (
-            <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-3">
-              {interests.map((interest) => (
-                <motion.div key={interest.id} variants={fadeUp}>
-                  <GlassCard padding="sm">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-theme">
-                            {interest.referrer.referrerProfile?.fullName || interest.referrer.email}
-                          </span>
-                          <InterestBadge status={interest.status} />
-                        </div>
-                        <p className="text-sm text-muted">
-                          {interest.referrer.referrerProfile?.jobTitle} at {interest.referrer.referrerProfile?.company}
-                        </p>
-                        {interest.message && (
-                          <p className="text-sm text-muted/70 mt-2 italic">"{interest.message}"</p>
-                        )}
-                      </div>
-                      <div className="flex gap-2 shrink-0">
-                        {interest.status === "PENDING" && (
-                          <>
-                            <Button size="sm" onClick={() => updateMutation.mutate(interest.id)} isLoading={updateMutation.isPending}>
-                              Accept
-                            </Button>
-                            <Button size="sm" variant="ghost" onClick={() => declineMutation.mutate(interest.id)}>
-                              Decline
-                            </Button>
-                          </>
-                        )}
-                        {interest.status === "ACCEPTED" && interest.conversation && (
-                          <Link to={`/chat/${interest.conversation.id}`}>
-                            <Button size="sm" variant="secondary">
-                              <MessageSquare className="h-3 w-3" /> Chat
-                            </Button>
-                          </Link>
-                        )}
-                      </div>
-                    </div>
-                  </GlassCard>
-                </motion.div>
-              ))}
-            </motion.div>
+            <div className="space-y-8">
+              <RequestSection
+                title="Needs your response"
+                icon={Bell}
+                badge={pending.length > 0 ? <Badge variant="yellow">{pending.length} pending</Badge> : undefined}
+                description="Review these requests and accept to start chatting with a referrer."
+                interests={pending}
+                onAccept={(id) => acceptMutation.mutate(id)}
+                onDecline={(id) => declineMutation.mutate(id)}
+                acceptingId={acceptMutation.isPending ? acceptMutation.variables : undefined}
+              />
+
+              <RequestSection
+                title="Connected"
+                icon={CheckCircle2}
+                badge={accepted.length > 0 ? <Badge variant="green">{accepted.length} accepted</Badge> : undefined}
+                description="You accepted these requests. Chat to share your resume and discuss the referral."
+                interests={accepted}
+                onAccept={(id) => acceptMutation.mutate(id)}
+                onDecline={(id) => declineMutation.mutate(id)}
+              />
+
+              <RequestSection
+                title="Declined"
+                icon={XCircle}
+                interests={declined}
+                onAccept={(id) => acceptMutation.mutate(id)}
+                onDecline={(id) => declineMutation.mutate(id)}
+              />
+            </div>
           )}
         </div>
 

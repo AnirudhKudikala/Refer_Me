@@ -131,6 +131,7 @@ function InterestCard({
 function RequestSection({
   title,
   icon: Icon,
+  iconClassName = "text-accent",
   badge,
   description,
   interests,
@@ -140,6 +141,7 @@ function RequestSection({
 }: {
   title: string;
   icon: React.ElementType;
+  iconClassName?: string;
   badge?: React.ReactNode;
   description?: string;
   interests: Interest[];
@@ -153,7 +155,7 @@ function RequestSection({
     <section className="space-y-3">
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <Icon className="h-4 w-4 text-accent" />
+          <Icon className={`h-4 w-4 ${iconClassName}`} />
           <h3 className="font-medium text-theme">{title}</h3>
           {badge}
         </div>
@@ -252,7 +254,7 @@ export default function SeekerDashboard() {
                 title="Connected"
                 icon={CheckCircle2}
                 badge={accepted.length > 0 ? <Badge variant="green">{accepted.length} accepted</Badge> : undefined}
-                description="You accepted these requests. Chat to share your resume and discuss the referral."
+                description="You accepted these requests. Chat to discuss the referral."
                 interests={accepted}
                 onAccept={(id) => acceptMutation.mutate(id)}
                 onDecline={(id) => declineMutation.mutate(id)}
@@ -261,6 +263,7 @@ export default function SeekerDashboard() {
               <RequestSection
                 title="Declined"
                 icon={XCircle}
+                iconClassName="text-red-500"
                 interests={declined}
                 onAccept={(id) => acceptMutation.mutate(id)}
                 onDecline={(id) => declineMutation.mutate(id)}

@@ -8,7 +8,7 @@ interface AuthState {
   isInitialized: boolean;
   setUser: (user: User | null) => void;
   setMe: (me: MeResponse | null) => void;
-  setToken: (token: string) => void;
+  setToken: (token: string | null) => void;
   initialize: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -29,6 +29,18 @@ export const useAuthStore = create<AuthState>((set) => ({
   initialize: async () => {
     set({ isLoading: true });
     try {
+      const stored = api.getStoredToken();
+      if (stored) {
+        api.setToken(stored);
+        try {
+          const me = await api.getMe();
+          set({ me, user: { id: me.id, email: me.email, role: me.role } });
+          return;
+        } catch {
+          api.setToken(null);
+        }
+      }
+
       const refreshed = await api.refresh();
       if (refreshed) {
         set({ user: refreshed.user });

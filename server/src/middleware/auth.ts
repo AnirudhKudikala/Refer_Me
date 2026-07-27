@@ -1,12 +1,8 @@
 import type { Request, Response, NextFunction, RequestHandler } from "express";
-import type { Role } from "@prisma/client";
-import { verifyAccessToken } from "../lib/jwt.js";
+import { verifyAccessToken, type TokenPayload } from "../lib/jwt.js";
+import type { UserRole } from "../types/roles.js";
 
-export interface AuthPayload {
-  userId: string;
-  email: string;
-  role: Role | null;
-}
+export type AuthPayload = TokenPayload;
 
 export interface AuthRequest extends Request {
   auth?: AuthPayload;
@@ -27,7 +23,7 @@ export const requireAuth: RequestHandler = (req, res, next) => {
   }
 };
 
-export function requireRole(...roles: Role[]): RequestHandler {
+export function requireRole(...roles: UserRole[]): RequestHandler {
   return (req, res, next) => {
     const authReq = req as AuthRequest;
     if (!authReq.auth?.role || !roles.includes(authReq.auth.role)) {

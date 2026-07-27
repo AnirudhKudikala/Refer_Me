@@ -1,10 +1,18 @@
 import { API_URL } from "./utils";
 
+const ACCESS_TOKEN_KEY = "refer-me-access-token";
+
 class ApiClient {
   private accessToken: string | null = null;
 
   setToken(token: string | null) {
     this.accessToken = token;
+    if (token) sessionStorage.setItem(ACCESS_TOKEN_KEY, token);
+    else sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+  }
+
+  getStoredToken() {
+    return sessionStorage.getItem(ACCESS_TOKEN_KEY);
   }
 
   getToken() {
@@ -56,7 +64,7 @@ class ApiClient {
       });
       if (!res.ok) return null;
       const data = await res.json();
-      this.accessToken = data.accessToken;
+      this.setToken(data.accessToken);
       return data;
     } catch {
       return null;

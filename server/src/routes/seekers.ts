@@ -7,24 +7,48 @@ import { getResumeFilePath, serveResumeFile } from "../lib/resumeFile.js";
 
 const router = Router();
 
+type SeekerResumeRow = {
+  id: string;
+  fileName: string;
+  fileUrl: string;
+  fileSize: number;
+  mimeType: string;
+  uploadedAt: Date;
+};
+
+type SeekerProfileRow = {
+  fullName: string;
+  headline: string;
+  bio: string;
+  skills: string[];
+  desiredRoles: string[];
+  experienceYears: number;
+  location: string;
+  noticePeriod: string;
+  salaryExpectation: string;
+  immediateJoining: boolean;
+  updatedAt: Date;
+  linkedinUrl: string | null;
+  portfolioUrl: string | null;
+  user: {
+    id: string;
+    avatarUrl: string | null;
+    email: string;
+    resume: SeekerResumeRow | null;
+  };
+};
+
+type ReferrerInterestRow = {
+  id: string;
+  seekerId: string;
+  status: string;
+  message: string | null;
+  conversation: { id: string } | null;
+};
+
 function mapSeeker(
-  s: {
-    fullName: string;
-    headline: string;
-    bio: string;
-    skills: string[];
-    desiredRoles: string[];
-    experienceYears: number;
-    location: string;
-    noticePeriod: string;
-    salaryExpectation: string;
-    immediateJoining: boolean;
-    updatedAt: Date;
-    linkedinUrl: string | null;
-    portfolioUrl: string | null;
-    user: { id: string; avatarUrl: string | null; email: string; resume: { id: string; fileName: string; fileUrl: string; fileSize: number; mimeType: string; uploadedAt: Date } | null };
-  },
-  interest?: { id: string; status: string; message: string | null; conversation?: { id: string } | null } | null
+  s: SeekerProfileRow,
+  interest?: ReferrerInterestRow | null
 ) {
   return {
     id: s.user.id,
@@ -102,19 +126,21 @@ router.get("/", requireAuth, requireRole("REFERRER"), async (req, res, next) => 
         where: { referrerId: authReq.auth!.userId },
         include: { conversation: { select: { id: true } } },
       }),
-    ]);
+    ]) as [SeekerProfileRow[], ReferrerInterestRow[]];
 
-    const interestMap = new Map(interests.map((i) => [i.seekerId, i]));
+    const interestMap = new Map<string, ReferrerInterestRow>(
+      interests.map((interest) => [interest.seekerId, interest])
+    );
 
-    let filtered = allSeekers.filter((s) => {
-      if (skillList.length && !matchesAnyFuzzy(s.skills, skillList)) return false;
-      if (roleList.length && !matchesAnyFuzzy(s.desiredRoles, roleList)) return false;
+    let filtered = allSeekers.filter((seeker) => {
+      if (skillList.length && !matchesAnyFuzzy(seeker.skills, skillList)) return false;
+      if (roleList.length && !matchesAnyFuzzy(seeker.desiredRoles, roleList)) return false;
       return true;
     });
 
     const statusFilter = typeof interestStatus === "string" ? interestStatus : "ALL";
     if (statusFilter !== "ALL") {
-      filtered = filtered.filter((s) => interestMap.get(s.user.id)?.status === statusFilter);
+      filtered = filtered.filter((seeker) => interestMap.get(seeker.user.id)?.status === statusFilter);
     }
 
     const total = filtered.length;
@@ -122,22 +148,22 @@ router.get("/", requireAuth, requireRole("REFERRER"), async (req, res, next) => 
     const paginated = filtered.slice(skip, skip + limitNum);
 
     res.json({
-      data: paginated.map((s) => {
-        const interest = interestMap.get(s.user.id);
+      data: paginated.map((seeker) => {
+        const interest = interestMap.get(seeker.user.id);
         return {
-          id: s.user.id,
-          fullName: s.fullName,
-          headline: s.headline,
-          bio: s.bio,
-          skills: s.skills,
-          desiredRoles: s.desiredRoles,
-          experienceYears: s.experienceYears,
-          location: s.location,
-          noticePeriod: getNoticePeriodLabel(s),
-          immediateJoining: s.immediateJoining,
-          salaryExpectation: s.salaryExpectation,
-          profileUpdatedAt: s.updatedAt.toISOString(),
-          avatarUrl: s.user.avatarUrl,
+          id: seeker.user.id,
+          fullName: seeker.fullName,
+          headline: seeker.headline,
+          bio: seeker.bio,
+          skills: seeker.skills,
+          desiredRoles: seeker.desiredRoles,
+          experienceYears: seeker.experienceYears,
+          location: seeker.location,
+          noticePeriod: getNoticePeriodLabel(seeker),
+          immediateJoining: seeker.immediateJoining,
+          salaryExpectation: seeker.salaryExpectation,
+          profileUpdatedAt: seeker.updatedAt.toISOString(),
+          avatarUrl: seeker.user.avatarUrl,
           interest: interest
             ? { id: interest.id, status: interest.status }
             : null,
@@ -157,18 +183,18 @@ router.get("/:id", requireAuth, requireRole("REFERRER"), async (req, res, next) 
   try {
     const authReq = req as AuthRequest;
     const seekerId = req.params.id as string;
-    const profile = await prisma.seekerProfile.findUnique({
+    const profile = (await prisma.seekerProfile.findUnique({
       where: { userId: seekerId },
       include: {
         user: { select: { id: true, avatarUrl: true, email: true, resume: true } },
       },
-    });
+    })) as SeekerProfileRow | null;
     if (!profile) return res.status(404).json({ error: "Seeker not found" });
 
-    const interest = await prisma.interest.findUnique({
+    const interest = (await prisma.interest.findUnique({
       where: { referrerId_seekerId: { referrerId: authReq.auth!.userId, seekerId } },
       include: { conversation: { select: { id: true } } },
-    });
+    })) as ReferrerInterestRow | null;
 
     res.json(mapSeeker(profile, interest));
   } catch (err) {

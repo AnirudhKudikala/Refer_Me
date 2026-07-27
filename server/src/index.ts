@@ -14,6 +14,8 @@ import { setupSocket } from "./socket/index.js";
 const app = express();
 const httpServer = createServer(app);
 
+app.set("trust proxy", 1);
+
 app.use(
   cors({
     origin: env.clientUrl,

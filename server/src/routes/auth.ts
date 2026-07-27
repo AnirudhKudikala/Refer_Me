@@ -2,8 +2,9 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
-import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../lib/jwt.js";
+import { signAccessToken, signRefreshToken, verifyRefreshToken, type TokenPayload } from "../lib/jwt.js";
 import { requireAuth, type AuthRequest } from "../middleware/auth.js";
+import { env } from "../config/env.js";
 
 const router = Router();
 
@@ -18,17 +19,29 @@ const loginSchema = z.object({
   password: z.string(),
 });
 
-function setRefreshCookie(res: import("express").Response, token: string) {
-  res.cookie("refreshToken", token, {
+const crossOriginClient =
+  env.clientUrl.startsWith("https://") && !env.clientUrl.includes("localhost");
+
+function refreshCookieOptions() {
+  return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: crossOriginClient,
+    sameSite: crossOriginClient ? ("none" as const) : ("lax" as const),
     maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+    path: "/",
+  };
 }
 
-function issueTokens(user: { id: string; email: string; role: import("@prisma/client").Role | null }) {
-  const payload = { userId: user.id, email: user.email, role: user.role };
+function setRefreshCookie(res: import("express").Response, token: string) {
+  res.cookie("refreshToken", token, refreshCookieOptions());
+}
+
+function clearRefreshCookie(res: import("express").Response) {
+  res.clearCookie("refreshToken", refreshCookieOptions());
+}
+
+function issueTokens(user: { id: string; email: string; role: TokenPayload["role"] }) {
+  const payload: TokenPayload = { userId: user.id, email: user.email, role: user.role };
   return {
     accessToken: signAccessToken(payload),
     refreshToken: signRefreshToken(payload),
@@ -94,7 +107,7 @@ router.post("/refresh", async (req, res) => {
 });
 
 router.post("/logout", (_req, res) => {
-  res.clearCookie("refreshToken");
+  clearRefreshCookie(res);
   res.json({ ok: true });
 });
 

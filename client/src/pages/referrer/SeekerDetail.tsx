@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Mail, ExternalLink, MessageSquare, Clock, DollarSign, Briefcase, MapPin, CalendarClock } from "lucide-react";
+import { ArrowLeft, Mail, ExternalLink, MessageSquare, Clock, IndianRupee, Briefcase, MapPin, CalendarClock } from "lucide-react";
 import { PageTransition } from "../../components/layout/PageTransition";
 import { GlassCard } from "../../components/ui/GlassCard";
 import { Button } from "../../components/ui/Button";
@@ -90,7 +90,7 @@ export default function SeekerDetail() {
             <div className="flex items-center gap-2 text-muted"><MapPin className="h-4 w-4 text-accent" /> {seeker.location || "—"}</div>
             <div className="flex items-center gap-2 text-muted"><Briefcase className="h-4 w-4 text-accent" /> {seeker.experienceYears} years exp</div>
             <div className="flex items-center gap-2 text-muted"><Clock className="h-4 w-4 text-accent" /> {seeker.noticePeriod || "—"}</div>
-            <div className="flex items-center gap-2 text-muted"><DollarSign className="h-4 w-4 text-accent" /> {seeker.salaryExpectation || "—"}</div>
+            <div className="flex items-center gap-2 text-muted"><IndianRupee className="h-4 w-4 text-accent" /> {seeker.salaryExpectation || "—"}</div>
           </div>
 
           <p className="text-theme/90 leading-relaxed mb-6">{seeker.bio || "No bio provided."}</p>
@@ -141,6 +141,7 @@ export default function SeekerDetail() {
                   <ResumeActions
                     fileName={seeker.resume.fileName}
                     mimeType={seeker.resume.mimeType}
+                    resumeKey={seeker.resume.id}
                     seekerId={id!}
                   />
                 </div>

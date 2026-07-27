@@ -48,7 +48,11 @@ export function ResumeUpload({ compact = false, showProfileUpdated = false }: Re
             </div>
           </div>
           <div className="flex gap-1 shrink-0">
-            <ResumeActions fileName={me.resume.fileName} mimeType={me.resume.mimeType} />
+            <ResumeActions
+              fileName={me.resume.fileName}
+              mimeType={me.resume.mimeType}
+              resumeKey={me.resume.id}
+            />
             <Button variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} aria-label="Replace resume">
               <RefreshCw className="h-4 w-4" />
             </Button>

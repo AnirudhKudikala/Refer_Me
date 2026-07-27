@@ -73,7 +73,7 @@ export default function SeekerProfile() {
               onImmediateChange={(checked) => update({ immediateJoining: checked, noticePeriod: checked ? "" : form.noticePeriod })}
               onNoticePeriodChange={(noticePeriod) => update({ noticePeriod })}
             />
-            <Input label="Salary Expectation" placeholder="e.g. $120k – $150k" value={form.salaryExpectation} onChange={(e) => update({ salaryExpectation: e.target.value })} />
+            <Input label="Salary Expectation" placeholder="e.g. ₹10 LPA" value={form.salaryExpectation} onChange={(e) => update({ salaryExpectation: e.target.value })} />
             <TagInput label="Skills" value={form.skills} onChange={(skills) => update({ skills })} />
             <TagInput label="Desired Roles" value={form.desiredRoles} onChange={(desiredRoles) => update({ desiredRoles })} />
             <Textarea label="Bio" rows={4} value={form.bio} onChange={(e) => update({ bio: e.target.value })} />

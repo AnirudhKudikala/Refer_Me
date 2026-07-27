@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { MapPin, Briefcase, DollarSign, Clock, CalendarClock } from "lucide-react";
+import { MapPin, Briefcase, IndianRupee, Clock, CalendarClock } from "lucide-react";
 import { motion } from "framer-motion";
 import { GlassCard } from "../ui/GlassCard";
 import { Badge } from "../ui/Badge";
@@ -51,7 +51,7 @@ export function SeekerCardComponent({ seeker }: SeekerCardProps) {
               <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {seeker.noticePeriod || "Immediate"}</span>
             )}
             {seeker.salaryExpectation && (
-              <span className="flex items-center gap-1"><DollarSign className="h-3 w-3" /> {seeker.salaryExpectation}</span>
+              <span className="flex items-center gap-1"><IndianRupee className="h-3 w-3" /> {seeker.salaryExpectation}</span>
             )}
           </div>
           {seeker.profileUpdatedAt && (

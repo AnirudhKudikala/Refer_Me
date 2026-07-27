@@ -109,15 +109,19 @@ class ApiClient {
     return this.request("/me/resume", { method: "DELETE" });
   }
 
-  private async fetchResumeBlob(path: string): Promise<Blob> {
+  private async fetchResumeBlob(path: string, cacheKey?: string): Promise<Blob> {
     const headers: Record<string, string> = {};
     if (this.accessToken) headers.Authorization = `Bearer ${this.accessToken}`;
-    const res = await fetch(`${API_URL}${path}`, { headers, credentials: "include" });
+    if (cacheKey) headers["Cache-Control"] = "no-cache";
+    const url = cacheKey
+      ? `${API_URL}${path}${path.includes("?") ? "&" : "?"}v=${encodeURIComponent(cacheKey)}`
+      : `${API_URL}${path}`;
+    const res = await fetch(url, { headers, credentials: "include", cache: "no-store" });
     if (res.status === 401) {
       const refreshed = await this.refresh();
       if (refreshed) {
         headers.Authorization = `Bearer ${this.accessToken}`;
-        const retry = await fetch(`${API_URL}${path}`, { headers, credentials: "include" });
+        const retry = await fetch(url, { headers, credentials: "include", cache: "no-store" });
         if (!retry.ok) throw new Error("Failed to fetch resume");
         return retry.blob();
       }
@@ -126,18 +130,18 @@ class ApiClient {
     return res.blob();
   }
 
-  fetchMyResume(inline = false) {
+  fetchMyResume(inline = false, cacheKey?: string) {
     const qs = inline ? "?inline=1" : "";
-    return this.fetchResumeBlob(`/me/resume${qs}`);
+    return this.fetchResumeBlob(`/me/resume${qs}`, cacheKey);
   }
 
-  fetchSeekerResume(seekerId: string, inline = false) {
+  fetchSeekerResume(seekerId: string, inline = false, cacheKey?: string) {
     const qs = inline ? "?inline=1" : "";
-    return this.fetchResumeBlob(`/seekers/${seekerId}/resume${qs}`);
+    return this.fetchResumeBlob(`/seekers/${seekerId}/resume${qs}`, cacheKey);
   }
 
-  async downloadMyResume(fileName: string) {
-    const blob = await this.fetchMyResume(false);
+  async downloadMyResume(fileName: string, cacheKey?: string) {
+    const blob = await this.fetchMyResume(false, cacheKey);
     this.triggerDownload(blob, fileName);
   }
 
@@ -183,8 +187,8 @@ class ApiClient {
     });
   }
 
-  async downloadResume(seekerId: string, fileName: string) {
-    const blob = await this.fetchSeekerResume(seekerId, false);
+  async downloadSeekerResume(seekerId: string, fileName: string, cacheKey?: string) {
+    const blob = await this.fetchSeekerResume(seekerId, false, cacheKey);
     this.triggerDownload(blob, fileName);
   }
 

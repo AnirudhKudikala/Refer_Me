@@ -1,6 +1,7 @@
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import type { AuthRequest } from "./auth.js";
 import { env } from "../config/env.js";
 
 const uploadPath = path.resolve(env.uploadDir);
@@ -10,9 +11,10 @@ if (!fs.existsSync(uploadPath)) {
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadPath),
-  filename: (_req, file, cb) => {
+  filename: (req, file, cb) => {
+    const userId = (req as AuthRequest).auth?.userId ?? "anonymous";
     const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    cb(null, `${unique}${path.extname(file.originalname)}`);
+    cb(null, `${userId}-${unique}${path.extname(file.originalname)}`);
   },
 });
 

@@ -19,6 +19,8 @@ export function serveResumeFile(
     return;
   }
   res.setHeader("Content-Type", mimeType);
+  res.setHeader("Cache-Control", "private, no-store, no-cache, must-revalidate");
+  res.setHeader("Pragma", "no-cache");
   res.setHeader(
     "Content-Disposition",
     `${inline ? "inline" : "attachment"}; filename="${encodeURIComponent(fileName)}"`

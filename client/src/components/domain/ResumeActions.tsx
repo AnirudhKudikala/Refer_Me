@@ -7,23 +7,27 @@ import { api } from "../../lib/api";
 interface ResumeActionsProps {
   fileName: string;
   mimeType: string;
+  resumeKey?: string;
   seekerId?: string;
   size?: "sm" | "md";
 }
 
-export function ResumeActions({ fileName, mimeType, seekerId, size = "sm" }: ResumeActionsProps) {
+export function ResumeActions({ fileName, mimeType, resumeKey, seekerId, size = "sm" }: ResumeActionsProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const fetchBlob = useCallback(
-    () => (seekerId ? api.fetchSeekerResume(seekerId, true) : api.fetchMyResume(true)),
-    [seekerId]
+    () =>
+      seekerId
+        ? api.fetchSeekerResume(seekerId, true, resumeKey)
+        : api.fetchMyResume(true, resumeKey),
+    [seekerId, resumeKey]
   );
 
   const handleDownload = async () => {
     if (seekerId) {
-      await api.downloadResume(seekerId, fileName);
+      await api.downloadSeekerResume(seekerId, fileName, resumeKey);
     } else {
-      await api.downloadMyResume(fileName);
+      await api.downloadMyResume(fileName, resumeKey);
     }
   };
 

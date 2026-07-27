@@ -71,7 +71,7 @@ export default function SeekerOnboarding() {
                 onImmediateChange={(checked) => update({ immediateJoining: checked, noticePeriod: checked ? "" : form.noticePeriod })}
                 onNoticePeriodChange={(noticePeriod) => update({ noticePeriod })}
               />
-              <Input label="Salary Expectation" placeholder="e.g. $120k – $150k" value={form.salaryExpectation} onChange={(e) => update({ salaryExpectation: e.target.value })} />
+              <Input label="Salary Expectation" placeholder="e.g. ₹10 LPA" value={form.salaryExpectation} onChange={(e) => update({ salaryExpectation: e.target.value })} />
             </div>
           )}
           {step === 1 && (

@@ -1,7 +1,6 @@
-import express from "express";
+import express, { type Request, type Response } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import path from "path";
 import { createServer } from "http";
 import { env } from "./config/env.js";
 import { errorHandler } from "./middleware/errorHandler.js";
@@ -24,9 +23,7 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-app.use("/uploads", express.static(path.resolve(env.uploadDir)));
-
-app.get("/health", (_req, res) => res.json({ ok: true }));
+app.get("/health", (_req: Request, res: Response) => res.json({ ok: true }));
 
 app.use("/auth", authRoutes);
 app.use("/me", meRoutes);

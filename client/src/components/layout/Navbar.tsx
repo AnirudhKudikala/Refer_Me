@@ -1,6 +1,7 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { LogOut, MessageSquare, User, Users, Home, Sun, Moon } from "lucide-react";
+import { getRoleHomePath } from "./ProtectedRoute";
 import { useAuthStore } from "../../stores/authStore";
 import { useThemeStore } from "../../stores/themeStore";
 import { Button } from "../ui/Button";
@@ -35,7 +36,7 @@ export function Navbar() {
     navigate("/");
   };
 
-  const homePath = user?.role === "SEEKER" ? "/seeker" : user?.role === "REFERRER" ? "/referrer" : "/";
+  const homePath = getRoleHomePath(user?.role);
 
   return (
     <motion.nav

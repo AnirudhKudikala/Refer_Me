@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AnimatePresence } from "framer-motion";
 import { useEffect } from "react";
 import { Navbar } from "./components/layout/Navbar";
-import { ProtectedRoute } from "./components/layout/ProtectedRoute";
+import { ProtectedRoute, GuestRoute } from "./components/layout/ProtectedRoute";
 import { useAuthStore } from "./stores/authStore";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
@@ -42,9 +42,9 @@ function AppRoutes() {
       <Navbar />
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/" element={<GuestRoute><Landing /></GuestRoute>} />
+          <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+          <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
 
           <Route path="/seeker/onboarding" element={<ProtectedRoute role="SEEKER"><SeekerOnboarding /></ProtectedRoute>} />
           <Route path="/seeker/profile" element={<ProtectedRoute role="SEEKER"><SeekerProfile /></ProtectedRoute>} />
